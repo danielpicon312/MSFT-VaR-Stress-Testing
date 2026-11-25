@@ -1,0 +1,18 @@
+# Normalize line endings across Windows, macOS and Linux
+* text=auto
+
+# Text files
+*.py    text diff=python
+*.md    text
+*.csv   text
+*.txt   text
+*.ipynb text
+
+# Binary files (never modify or diff)
+*.db    binary
+*.png   binary
+*.jpg   binary
+*.pbix  binary
+
+# Count notebooks as documentation so the repo language shows as Python
+*.ipynb linguist-documentation
