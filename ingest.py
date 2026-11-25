@@ -7,7 +7,7 @@ CSV_PATH = BASE_DIR / 'msft_daily.csv'
 DB_PATH = BASE_DIR / 'risk.db'
 
 # yfinance CSVs have 3 header rows (Price/Ticker/Date), so skip them and set names directlyprint("Loading Dataset...", flush=True)
-col_names = ["Date", "Close", "High", "Low", "Open", "Volume", "Symbol"]
+col_names = ["Date", "Close", "High", "Low", "Open", "Volume"]
 df = pd.read_csv(CSV_PATH, names=col_names, skiprows=3)
 
 print("Cleaning dataset...", flush=True)
@@ -38,9 +38,18 @@ CREATE TABLE msft_stock (
     PRIMARY KEY (date),
     CONSTRAINT check_positives CHECK (
         close > 0 AND high > 0 AND low > 0 AND open > 0 AND volume > 0
-        AND high >= close AND high >= low AND high >= open AND low <= close AND low <= open)
+        AND high >= close - 0.000001 AND high >= low - 0.000001 
+        AND high >= open - 0.000001 AND low <= close + 0.000001 
+        AND low <= open + 0.000001)
 )
 """)
+
+rejected_rows = cursor.execute("""
+SELECT * FROM raw_prices
+WHERE (Date IS NULL OR TRIM(Date) = '') OR Close <= 0 OR High <= 0 OR Low <= 0
+OR Open <= 0 OR Volume <= 0 OR High < Close - 0.000001 OR High < Low - 0.000001 OR High < Open - 0.000001
+OR Low > Close + 0.000001 OR Low > Open + 0.000001
+""").fetchall()
 
 # WHERE pre-filters blanks and non-positive values;
 # OR IGNORE skips any row that still breaks the PRIMARY KEY or CHECK constraints
@@ -52,14 +61,7 @@ INSERT OR IGNORE INTO msft_stock (date, close, high, low, open, volume, symbol)
     AND Close > 0 AND High > 0 AND Low > 0 AND Open > 0 AND Volume > 0
 """)
 
-rejected_rows = cursor.execute("""
-SELECT * FROM raw_prices
-WHERE (Date IS NULL OR TRIM(Date) = '') OR close <= 0 OR high <= 0 OR low <= 0
-OR open <= 0 OR volume <= 0 OR high < close OR high < low OR high < open 
-OR low > close OR low > open 
-""").fetchall()
-
-print(f'Rejected Row: {rejected_rows}')
+print(f'Rejected Row(s): {rejected_rows}')
 
 # Compare counts so silently rejected rows are visible
 raw_rows = cursor.execute("SELECT COUNT(*) FROM raw_prices").fetchone()[0]
