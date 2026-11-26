@@ -10,8 +10,8 @@ A Python and SQLite pipeline that estimates the one-day market risk of a positio
 
 | Confidence | Parametric (normal) | Historical |
 |---|---|---|
-| 95% | 2.76% ($2,762.61) | 2.66% ($2,658.72) |
-| 99% | 3.95% ($3,948.43) | 4.25% ($4,249.00) |
+| 95% | 2.76% ($2,762.24) | 2.66% ($2,658.67) |
+| 99% | 3.95% ($3,947.81) | 4.25% ($4,247.61) |
 
 At 95% confidence the two methods are closely aligned. At 99%, the parametric estimate is about 7% lower than the historical estimate, meaning the normal model understates the size of extreme daily losses.
 
