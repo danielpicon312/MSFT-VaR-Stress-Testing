@@ -55,4 +55,6 @@ print(f'95%             {(p_var_05_price/msft_holdings):.2%}  (${p_var_05_price:
 print(f'99%             {(p_var_01_price/msft_holdings):.2%}  (${p_var_01_price:,.2f})      {(h_var_99_price/msft_holdings):.2%}  (${h_var_99_price:,.2f})\n')
 
 daily_returns_kurtosis = daily_returns.kurt()
+daily_returns_skewness = daily_returns.skew()
 print(f'Excess kurtosis: {daily_returns_kurtosis:.2f}\n')
+print(f'Daily Returns Skewness: {daily_returns_skewness:.2f}\n')

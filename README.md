@@ -15,7 +15,7 @@ A Python and SQLite pipeline that estimates the one-day market risk of a positio
 
 At 95% confidence the two methods are closely aligned. At 99%, the parametric estimate is about 7% lower than the historical estimate, meaning the normal model understates the size of extreme daily losses.
 
-This is consistent with the distribution of returns. MSFT's daily returns have an excess kurtosis of 8.90, compared with 0 for a normal distribution, so large moves occur far more often than a normal model assumes.
+This is consistent with the distribution of returns. MSFT's daily returns have an excess kurtosis of 8.90, compared with 0 for a normal distribution, so large moves occur far more often than a normal model assumes. Skewness is mildly positive (0.33), meaning the largest up days have been somewhat larger than the largest down days over this period. The underestimation of losses at 99% is therefore driven by the heavy tails rather than by a negative skew.
 
 | Statistic | Value |
 |---|---|
@@ -23,7 +23,7 @@ This is consistent with the distribution of returns. MSFT's daily returns have a
 | Daily volatility | 1.74% |
 | Annualized volatility | 27.62% |
 | Excess kurtosis | 8.90 |
-| Skewness | [TODO] |
+| Skewness | 0.33 |
 
 Interpretation: on roughly 95% of trading days, the loss on a $100,000 position is not expected to exceed about $2,700. On approximately 1 day in 20, the loss will be larger.
 
