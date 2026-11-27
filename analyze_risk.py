@@ -40,8 +40,11 @@ print(f'On a ${msft_holdings:,} MSFT position, 1-day 99% VaR = ${h_var_99_price:
 
 mean_return = np.mean(daily_returns)
 
-z_score_05 = stats.norm.ppf(0.05)
-z_score_01 = stats.norm.ppf(0.01)
+alpha_05 = 0.05
+alpha_01 = 0.01
+
+z_score_05 = stats.norm.ppf(alpha_05)
+z_score_01 = stats.norm.ppf(alpha_01)
 
 p_var_05 = -(mean_return + z_score_05 * daily_vol)
 p_var_01 = -(mean_return + z_score_01 * daily_vol)
@@ -56,5 +59,28 @@ print(f'99%             {(p_var_01_price/msft_holdings):.2%}  (${p_var_01_price:
 
 daily_returns_kurtosis = daily_returns.kurt()
 daily_returns_skewness = daily_returns.skew()
-print(f'Excess kurtosis: {daily_returns_kurtosis:.2f}\n')
+print(f'Excess kurtosis: {daily_returns_kurtosis:.2f}')
 print(f'Daily Returns Skewness: {daily_returns_skewness:.2f}\n')
+
+rolling_window = daily_returns.rolling(window=250)
+rolling_mean = rolling_window.mean()
+rolling_std = rolling_window.std()
+
+pv05_rolling = -(stats.norm.ppf(alpha_05, loc=rolling_mean.shift(1), scale=rolling_std.shift(1)))
+pv01_rolling = -(stats.norm.ppf(alpha_01, loc=rolling_mean.shift(1), scale=rolling_std.shift(1)))
+
+hv05_rolling = -(rolling_window.quantile(alpha_05).shift(1))
+hv01_rolling = -(rolling_window.quantile(alpha_01).shift(1))
+
+rolled_data = pd.DataFrame({
+    "Daily Return": daily_returns,
+    "Parametric 95%": pv05_rolling,
+    "Parametric 99%": pv01_rolling,
+    "Historic 95%": hv05_rolling,
+    "Historic 99%": hv01_rolling
+}).dropna()
+
+print(f'Number of test days: {len(rolled_data)}')
+print(f'Backtest period: {rolled_data.index[0].date()} - {rolled_data.index[len(rolled_data)-1].date()}\n')
+print(rolled_data.head())
+print("\n",rolled_data.loc['2020-03'],"\n")

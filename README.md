@@ -2,7 +2,7 @@
 
 A Python and SQLite pipeline that estimates the one-day market risk of a position in Microsoft (MSFT) stock. Value at Risk (VaR) is calculated with a parametric (normal) model and with historical simulation, and the two are compared to show where the normal assumption breaks down.
 
-*Status: in progress. The data pipeline and VaR estimates are complete; backtesting and stress testing are under way.*
+*Status: in progress. The data pipeline, VaR estimates and rolling VaR series are complete; exception testing and stress testing are under way.*
 
 ## Results
 
@@ -37,7 +37,7 @@ download_data.py  →  msft_daily.csv  →  ingest.py  →  risk.db  →  analyz
 
 `ingest.py` cleans the data and loads it into SQLite through a staging table. The target table enforces a primary key on date, NOT NULL on every column, and CHECK constraints that reject non-positive prices and internally inconsistent rows (for example, a high below the close). The script reports the number of rejected rows and lists them for review.
 
-`analyze_risk.py` reads the validated prices and computes returns, volatility, VaR and distribution statistics.
+`analyze_risk.py` reads the validated prices and computes returns, volatility, VaR, distribution statistics and rolling VaR for backtesting.
 
 ## Data
 
@@ -71,9 +71,29 @@ Historical VaR is the negative of the 5th or 1st percentile of observed daily re
 
 Returns are negative for losses; VaR is reported as a positive loss.
 
+## Backtesting
+
+To test whether each model would have held up in practice, VaR is re-estimated every day from the previous 250 trading days of returns only. Each estimate is shifted forward one day, so no forecast uses information from the day it is tested against. The backtest covers 2,741 trading days, from December 31, 2015 to November 24, 2026.
+
+A day is counted as an exception when the actual return is below −VaR. At 95% confidence, exceptions are expected on about 5% of days (≈137); at 99%, on about 1% (≈27). The Kupiec proportion-of-failures test will be used to check whether the observed exception rates are statistically consistent with these targets.
+
+### Early observation: March 2020
+
+The rolling estimates show how slowly a 250-day window reacts to a sudden shock. Parametric 99% VaR was 3.08% on March 3, 2020 and had only risen to 4.38% by March 16, when MSFT fell 14.74%. VaR then peaked at 5.44% on March 31, after the worst losses had passed.
+
+| Date | Daily return | Parametric 99% VaR | Exception |
+|---|---|---|---|
+| 2020-03-03 | −4.79% | 3.08% | Yes |
+| 2020-03-09 | −6.78% | 3.27% | Yes |
+| 2020-03-12 | −9.48% | 3.64% | Yes |
+| 2020-03-16 | −14.74% | 4.38% | Yes |
+| 2020-03-31 | −1.57% | 5.44% | No |
+
+Because every day in the window carries equal weight, the estimate was lowest just before the crash and highest just after it. This lag is a known weakness of equally weighted rolling VaR and motivates an EWMA volatility model, which places more weight on recent returns.
+
 ## Next Steps
 
-- Rolling 250-day backtest of both methods, with the Kupiec proportion-of-failures test
+- Exception counts and the Kupiec proportion-of-failures test for both methods
 - Stress testing: worst single days, maximum drawdown, and selected periods (August 2015, Q4 2018, March 2020, 2022)
 - Charts: return distribution with VaR thresholds, rolling volatility, backtest exceptions
 - Expected Shortfall and EWMA volatility
